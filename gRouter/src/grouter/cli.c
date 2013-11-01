@@ -802,7 +802,7 @@ void filterCmd()
  */
 void versionCmd()
 {
-	printf("\nGINI Router Version: %s \n\n", prog_version());
+	printf("\nGINI_Xuepeng Router Version: %s \n\n", prog_version());
 }
 
 
