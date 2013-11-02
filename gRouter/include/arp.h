@@ -34,7 +34,7 @@
 
 /*
  * TODO: Expand this entry?? Should we not include other parameters such
- * as
+ * asuchar
  */
 typedef struct _arp_entry_t
 {
