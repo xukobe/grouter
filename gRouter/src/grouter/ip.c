@@ -52,6 +52,7 @@ void IPIncomingPacket(gpacket_t *in_pkt) {
         // TODO: rudimentary 'broadcast IP address' check
         verbose(2, "[IPIncomingPacket]:: not repeat broadcast (final destination %s), packet thrown",
                 IP2Dot(tmpbuf, gNtohl((tmpbuf + 20), ip_pkt->ip_dst)));
+        printf("Received a broadcast packet\n");
         IPProcessBcastPacket(in_pkt);
     } else {
         // Destinated to someone else
@@ -94,9 +95,10 @@ int IPProcessBcastPacket(gpacket_t *in_pkt) {
     
     ip_packet_t *ip_pkt = (ip_packet_t *) in_pkt->data.data;
    
-
+    printf("In IPProcessBcastPacket\n");
     if (IPVerifyPacket(ip_pkt) == EXIT_SUCCESS) {
     //Xuepeng: add OSPF protocol process section
+        printf("After verify\n");
         if (ip_pkt->ip_prot == OSPF_PROTOCOL){
             OSPFProcess(in_pkt);
         }
