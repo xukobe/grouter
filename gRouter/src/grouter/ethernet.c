@@ -123,7 +123,10 @@ void* fromEthernetDev(void *arg)
 			free(in_pkt);
 			continue;   // skip the rest of the loop
 		}
-
+                //Xuepeng: Debug
+                if(((ip_packet_t*)(in_pkt->data.data))->ip_prot==OSPF_PROTOCOL){
+                    printf("Received a OSPF packet\n");
+                }
 		verbose(2, "[fromEthernetDev]:: Packet is sent for enqueuing..");
 		enqueuePacket(pcore, in_pkt, sizeof(gpacket_t));
 	}

@@ -354,7 +354,8 @@ void *packetProcessor(void *pc)
 		{
 		case IP_PROTOCOL:
 			verbose(2, "[packetProcessor]:: Packet sent to IP routine for further processing.. ");
-
+                        //xuepeng
+                        printf("Received an IP packet\n");
 			IPIncomingPacket(in_pkt);
 			break;
 		case ARP_PROTOCOL:

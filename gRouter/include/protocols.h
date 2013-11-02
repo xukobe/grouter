@@ -18,5 +18,7 @@
 #define ICMP_PROTOCOL 		    1
 #define TCP_PROTOCOL 		    6
 #define UDP_PROTOCOL 		    17
+// Xuepeng: add OSPF PROTOCOL ID for IP header
+#define OSPF_PROTOCOL               89
 
 #endif
