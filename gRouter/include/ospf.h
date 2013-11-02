@@ -9,6 +9,7 @@
 
 #include "ip.h"
 #include "gnet.h"
+#include "message.h"
 
 #define DEFAULT_HELLO_INTERVAL 10
 #define DEFAULT_DEAD_INTERVAL 40
@@ -54,7 +55,7 @@ typedef struct _ospf_hello_data_t{
 
 typedef struct _ospf_neigh_entry_t
 {
-    uchar neighbor[4];
+    uchar neighborIP[4];
     bool isEmpty;
     int interface_id;
     uchar neighbormask[4];
@@ -66,6 +67,8 @@ typedef struct _ospf_neigh_array_t
     ospf_neigh_entry elem[MAX_INTERFACES];
 };
 
+
+
 int OSPFInit();
 
 void *OSPFSendHelloMessage(void* ptr);
@@ -76,5 +79,7 @@ int OSPFInitLSAThread();
 
 void *OSPFCheckDead(void* ptr);
 int OSPFInitCheckDeadThread();
+
+void OSPFProcess(gpacket_t* in_packet);
 
 #endif
