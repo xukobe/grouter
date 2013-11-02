@@ -782,6 +782,7 @@ void *GNETHandler(void *outq)
 				COPY_MAC(in_pkt->data.header.dst, mac_addr);
 			else
 			{
+                            // send a ARP braodcast
 				ARPResolve(in_pkt);
 				continue;
 			}
@@ -790,7 +791,7 @@ void *GNETHandler(void *outq)
                 //Xuepeng:
                 ip_packet_t *ip_pkt = (ip_packet_t*) (in_pkt->data.data);
                 printf("GNET %s\n",IP2Dot(tmpbuf,ip_pkt->ip_dst));
-                
+                //send packet
 		iface->devdriver->todev((void *)in_pkt);
 
 	}

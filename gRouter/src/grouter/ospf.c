@@ -41,17 +41,28 @@ void *OSPFSendHelloMessage(void* ptr) {
                 RESET_DF_BITS(ip_pkt->ip_frag_off);
                 RESET_MF_BITS(ip_pkt->ip_frag_off);
                 ip_pkt->ip_frag_off = 0;
-
+                
+                // jingsi's job: change packet length
+                //change pointer to type char * + 20 instead of ip_pkt + 20, then change pointer to type ospf_header_t
+                //alternatively: ip_pkt +1 
                 ip_pkt->ip_pkt_len = htons(ip_pkt->ip_hdr_len * 4);
-        //
+                
+       
                 //printf("%d",netarray.elem[i]->interface_id);
+                 //jingsi: frame.dst_interface is outgoing interface.
+                //jingsi: netarray.elem[i]-> interface_id is interface identifier.
                 pkt->frame.dst_interface = netarray.elem[i]->interface_id;
-
+                
+                //jingsi: set ip_src to the IP address of current interface IP.       
                 COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+                
+                //jingsi: dest_ip is the broadcast IP
                 COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+                
+                //jingsi:  frame.nxth_ip_addr is destination interface IP address
                 COPY_IP(pkt->frame.nxth_ip_addr, gHtonl(tmpbuf, dst_ip));
+               //xuepeng: an alternative method to bypass the ARP resolution.            
                 pkt->frame.arp_valid=FALSE;
-                //an alternative method to bypass the ARP resolution.
                 pkt->frame.arp_bcast=TRUE;
                 COPY_MAC(pkt->data.header.dst,mac_addr);
 
