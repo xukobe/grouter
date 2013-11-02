@@ -15,6 +15,7 @@
 #include "packetcore.h"
 #include "classifier.h"
 #include "filter.h"
+#include "ospf.h"
 #include <pthread.h>
 
 router_config rconfig = {.router_name=NULL, .gini_home=NULL, .cli_flag=0, .config_file=NULL, .config_dir=NULL, .ghandler=0, .clihandler= 0, .scheduler=0, .worker=0, .schedcycle=10000};
@@ -56,6 +57,7 @@ int main(int ac, char *av[])
 	char rpath[MAX_NAME_LEN];
 	int status, *jstatus;
 	simplequeue_t *outputQ, *workQ, *qtoa;
+        pthread_t id;
 
 	// setup the program properties
 	setupProgram(ac, av);
@@ -93,11 +95,14 @@ int main(int ac, char *av[])
 
 	// start the CLI..
 	CLIInit(&(rconfig));
-
+        //xuepeng
+        printf("Invoke OPSFInit!\n");
+        //id=OSPFInitHelloThread();
 
 	wait4thread(rconfig.scheduler);
 	wait4thread(rconfig.worker);
 	wait4thread(rconfig.ghandler);
+        //wait4thread(id);
 }
 
 
