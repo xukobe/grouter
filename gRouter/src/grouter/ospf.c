@@ -54,7 +54,6 @@ void *OSPFSendHelloMessage(void* ptr) {
     uchar designated[4] = DEFAULT_DESIGNATED_ROUTER_IP;
     uchar backupdesignated[4] = DEFAULT_BACKUP_DESIGNATED_ROUTER_IP;
 
-    ushort cksum;
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     printf("%d\n", netarray.count);
     while (1) {
@@ -230,7 +229,7 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         }
         
     }
-    else if(ospf_pkt->type==2){
+    else if(ospf_pkt->type==4){
         ospf_lsa_header_t* lsa_header = (ospf_lsa_header_t*) (ospf_pkt + 1);
         lsa_data_t* lsa_data = (lsa_data_t*) (lsa_header + 1);
         
