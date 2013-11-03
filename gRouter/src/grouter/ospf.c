@@ -158,6 +158,10 @@ int OSPFInitHelloThread() {
     return threadid;
 }
 
+void *OSPFSendLSAMessage(void* ptr){
+    
+}
+
 void OSPFPacketProcess(gpacket_t* in_packet){
     int hello_neighbors_size=0;
     int i=0;

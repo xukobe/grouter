@@ -90,6 +90,23 @@ typedef struct _neigh_array_t
     int count;
 }neigh_array_t;
 
+typedef struct _lsa_elem_t
+{
+    uchar linkID[4];
+    uchar linkData[4];
+    uint8_t linkType;
+    uint8_t allZeros1[3];
+    uint8_t allZeros2[2];
+    uint16_t metrics;
+}lsa_elem_t;
+
+typedef struct _lsa_data_t
+{
+    uint16_t allZeors;
+    uint16_t numberOfLinks;
+    lsa_elem_t elem[MAX_INTERFACES];
+};
+
 int OSPFInit();
 
 void *OSPFSendHelloMessage(void* ptr);
