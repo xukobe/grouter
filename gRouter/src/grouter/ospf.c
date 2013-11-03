@@ -228,6 +228,10 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
             printf("Hello data neighbors %d: %u.%u.%u.%u\n", i + 1, hello_data->neighbors[i].ip[0], hello_data->neighbors[i].ip[1], hello_data->neighbors[i].ip[2], hello_data->neighbors[i].ip[3]);
         }
         
+        if(hello_updateTheNeighbors(in_packet)){
+            printf("Need update!");
+        }
+        
     }
     else if(ospf_pkt->type==4){
         ospf_lsa_header_t* lsa_header = (ospf_lsa_header_t*) (ospf_pkt + 1);
@@ -238,6 +242,42 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         printf("LSA data first element ip:%s\n",IP2Dot(tmpbuf,lsa_data->elem[0].linkID));
     }
 
+}
+
+//update the neighbors information and return true if any value (except timestamp) changed
+bool hello_updateTheNeighbors(gpacket_t* in_pkt){
+    bool update=FALSE;
+    ip_packet_t* ip_pkt = (ip_packet_t*) (in_pkt->data.data);
+    ospf_header_t* ospf_pkt = (ospf_header_t*) (ip_pkt + 1);
+    ospf_hello_data_t* hello_data = (ospf_hello_data_t*) (ospf_pkt + 1);
+    
+    int interface_id=in_pkt->frame.src_interface;
+    uchar pkt_ip[4];
+    uchar netmask[4];
+    COPY_IP(pkt_ip, gNtohl(tmpbuf, ip_pkt->ip_dst));
+    COPY_IP(netmask,gNtohl(tmpbuf, hello_data->netmask));
+    if(!COMPARE_IP(neigharray.neighbors[interface_id].ip, pkt_ip)){
+        
+        COPY_IP(neigharray.neighbors[interface_id].ip, pkt_ip);
+        update=TRUE;
+    }
+    
+    if(!COMPARE_IP(neigharray.neighbors[interface_id].netmask, netmask)){
+        COPY_IP(neigharray.neighbors[interface_id].netmask, netmask);
+        update=TRUE;
+    }
+    
+    //the rest of the properties are not very important, we ignored here.
+    return update;
+}
+
+bool checkInterfaceIsAlive(int interface_id){
+    if(!neigharray.neighbors[interface_id].isalive){
+        return FALSE;
+    }
+    else{
+        return TRUE;
+    }
 }
 
 void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {

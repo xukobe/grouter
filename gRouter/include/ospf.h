@@ -45,6 +45,22 @@ typedef struct _ospf_lsa_header_t
     uint16_t len;
 }ospf_lsa_header_t;
 
+typedef struct _lsa_elem_t
+{
+    uchar linkID[4];
+    uchar linkData[4];
+    uint8_t linkType;
+    uint8_t allZeros[5];
+    uint16_t metrics;
+}lsa_elem_t;
+
+typedef struct _lsa_data_t
+{
+    uint16_t allZeors;
+    uint16_t numberOfLinks;
+    lsa_elem_t elem[MAX_INTERFACES];
+}lsa_data_t;
+
 typedef struct _neigh_ip_t{
     uchar ip[4];
 }neigh_ip_t;
@@ -59,22 +75,6 @@ typedef struct _ospf_hello_data_t{
     uchar backupdesignateIP[4];
     neigh_ip_t neighbors[MAX_INTERFACES];
 }ospf_hello_data_t;
-
-/*
-typedef struct _ospf_neigh_entry_t
-{
-    uchar neighborIP[4];
-    bool isEmpty;
-    int interface_id;
-    uchar neighbormask[4];
-}ospf_neigh_entry_t;
-
-typedef struct _ospf_neigh_array_t
-{
-    int count;
-    ospf_neigh_entry_t elem[MAX_INTERFACES];
-}ospf_neigh_array_t;
-*/
 
 typedef struct _neigh_entry_t
 {
@@ -91,22 +91,6 @@ typedef struct _neigh_array_t
     neigh_entry_t neighbors[MAX_INTERFACES];
     uint16_t count;
 }neigh_array_t;
-
-typedef struct _lsa_elem_t
-{
-    uchar linkID[4];
-    uchar linkData[4];
-    uint8_t linkType;
-    uint8_t allZeros[5];
-    uint16_t metrics;
-}lsa_elem_t;
-
-typedef struct _lsa_data_t
-{
-    uint16_t allZeors;
-    uint16_t numberOfLinks;
-    lsa_elem_t elem[MAX_INTERFACES];
-}lsa_data_t;
 
 int OSPFInit();
 
