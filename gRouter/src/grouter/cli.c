@@ -50,7 +50,8 @@ extern filtertab_t *filter;
 extern pktcore_t *pcore;
 
 
-void sendOSPF();
+void sendOSPFHello();
+void sendOSPFLSA();
 /*
  * This is the main routine of the CLI. Everything starts here.
  * The CLI registers and commands into a hash table and forks a thread to
@@ -94,8 +95,8 @@ int CLIInit(router_config *rarg)
 	registerCLI("spolicy", spolicyCmd, SHELP_SPOLICY, USAGE_SPOLICY, LHELP_SPOLICY); // Check
 	registerCLI("class", classCmd, SHELP_CLASS, USAGE_CLASS, LHELP_CLASS);
 	registerCLI("filter", filterCmd, SHELP_FILTER, USAGE_FILTER, LHELP_FILTER);
-        registerCLI("ospf",sendOSPF,SHELP_PING,SHELP_PING,SHELP_PING);
-
+        registerCLI("ospfHello",sendOSPFHello,SHELP_PING,SHELP_PING,SHELP_PING);
+        registerCLI("ospfLSA",sendOSPFLSA,SHELP_PING,SHELP_PING,SHELP_PING);
 
 	if (rarg->config_dir != NULL)
 		chdir(rarg->config_dir);                  // change to the configuration directory
@@ -1167,9 +1168,13 @@ void spolicyCmd()
 }
 
 
-void sendOSPF()
+void sendOSPFHello()
 {
     //OSPFSendHelloMessage(NULL);
     OSPFInitHelloThread();
+}
+
+void sendOSPFLSA(){
+    OSPFInitLSAThread();
 }
 
