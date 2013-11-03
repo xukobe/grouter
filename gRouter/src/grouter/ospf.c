@@ -1,7 +1,7 @@
 /*
  * ospf.c (collection of functions that implement the Open  (OSPF).
  * AUTHOR: Original version by Xuepeng
- *         Revised by ....
+ *         Revised by Haowei
  * DATE:   Nov.1st 2013
  */
 
