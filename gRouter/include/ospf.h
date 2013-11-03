@@ -72,7 +72,7 @@ typedef struct _ospf_hello_data_t{
     uint8_t priority;
     uint32_t deadInterval;
     uchar designatedIP[4];
-    uchar backupdesignateIP[4];
+    uchar backupdesignatedIP[4];
     neigh_ip_t neighbors[MAX_INTERFACES];
 }ospf_hello_data_t;
 
@@ -81,6 +81,10 @@ typedef struct _neigh_entry_t
     uchar ip[4];
     uchar netmask[4];
     time_t timestamp;//keep the time stamp for the last hello message
+    uint16_t helloInterval;
+    uint32_t deadInterval;
+    uchar designatedIP[4];
+    uchar backupdesignatedIP[4];
     int interface_id;
     bool isStub;
     bool isalive;
@@ -105,4 +109,5 @@ int OSPFInitCheckDeadThread();
 
 void OSPFPacketProcess(gpacket_t* in_packet);
 
+bool hello_updateTheNeighbors(gpacket_t* in_packet);
 #endif

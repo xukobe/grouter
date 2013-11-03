@@ -71,7 +71,7 @@ void *OSPFSendHelloMessage(void* ptr) {
                 hello_data->options = 0;
                 hello_data->priority = DEFAULT_PRIORITY;
                 hello_data->deadInterval = DEFAULT_DEAD_INTERVAL;
-                COPY_IP(hello_data->backupdesignateIP, gHtonl(tmpbuf, backupdesignated));
+                COPY_IP(hello_data->backupdesignatedIP, gHtonl(tmpbuf, backupdesignated));
                 COPY_IP(hello_data->designatedIP, gHtonl(tmpbuf, designated));
                 for (j = 0; j < MAX_INTERFACES; j++) {
                     if (neigharray.neighbors[j].isalive) {
@@ -229,6 +229,7 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         }
         
         if(hello_updateTheNeighbors(in_packet)){
+            //do something
             printf("Need update!");
         }
         
@@ -239,7 +240,7 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         
         printf("LSA header link state id %s\n",IP2Dot(tmpbuf, lsa_header->linkstateid));
         printf("LSA data number of links: %d\n",lsa_data->numberOfLinks);
-        printf("LSA data first element ip:%s\n",IP2Dot(tmpbuf,lsa_data->elem[0].linkID));
+        printf("LSA data first element ip:%s\n",IP2Dot(tmpbuf+20,lsa_data->elem[0].linkID));
     }
 
 }
@@ -250,23 +251,64 @@ bool hello_updateTheNeighbors(gpacket_t* in_pkt){
     ip_packet_t* ip_pkt = (ip_packet_t*) (in_pkt->data.data);
     ospf_header_t* ospf_pkt = (ospf_header_t*) (ip_pkt + 1);
     ospf_hello_data_t* hello_data = (ospf_hello_data_t*) (ospf_pkt + 1);
-    
+    char tmpbuf[MAX_TMPBUF_LEN];
     int interface_id=in_pkt->frame.src_interface;
+    
     uchar pkt_ip[4];
+    
     uchar netmask[4];
-    COPY_IP(pkt_ip, gNtohl(tmpbuf, ip_pkt->ip_dst));
-    COPY_IP(netmask,gNtohl(tmpbuf, hello_data->netmask));
-    if(!COMPARE_IP(neigharray.neighbors[interface_id].ip, pkt_ip)){
-        
+    uint16_t helloInterval;
+    uint32_t deadInterval;
+    uchar designatedIP[4];
+    uchar backupdesignatedIP[4];
+    helloInterval=hello_data->helloInterval;
+    deadInterval=hello_data->deadInterval;
+    COPY_IP(designatedIP,hello_data->designatedIP);
+    COPY_IP(backupdesignatedIP,hello_data->backupdesignatedIP);
+    COPY_IP(pkt_ip, gNtohl(tmpbuf, ip_pkt->ip_src));
+    COPY_IP(netmask,hello_data->netmask);
+    printf("Hello:original %s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].ip));
+    printf("Hello:pkt_ip %s\n",IP2Dot(tmpbuf,pkt_ip));
+    //printf("Hello:IP changed %s->%s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].ip),IP2Dot(tmpbuf,pkt_ip));
+    printf("Hello:Compare:%d\n",COMPARE_IP(neigharray.neighbors[interface_id].ip, pkt_ip));
+    if(COMPARE_IP(neigharray.neighbors[interface_id].ip, pkt_ip)!=0){
+        printf("Hello:IP changed %s->%s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].ip),IP2Dot(tmpbuf+20,pkt_ip));
         COPY_IP(neigharray.neighbors[interface_id].ip, pkt_ip);
         update=TRUE;
     }
     
-    if(!COMPARE_IP(neigharray.neighbors[interface_id].netmask, netmask)){
+    if(COMPARE_IP(neigharray.neighbors[interface_id].netmask, netmask)!=0){
+        printf("Hello:Netmask changed %s->%s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].netmask),IP2Dot(tmpbuf+20,netmask));
         COPY_IP(neigharray.neighbors[interface_id].netmask, netmask);
         update=TRUE;
     }
     
+    if(COMPARE_IP(neigharray.neighbors[interface_id].designatedIP, designatedIP)!=0){
+        printf("Hello:DesignatedIP changed %s->%s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].designatedIP),IP2Dot(tmpbuf+20,designatedIP));
+        COPY_IP(neigharray.neighbors[interface_id].designatedIP, designatedIP);
+        update=TRUE;
+    }
+    
+    if(COMPARE_IP(neigharray.neighbors[interface_id].backupdesignatedIP, backupdesignatedIP)!=0){
+        printf("Hello:BackupDesignatedIP changed %s->%s\n",IP2Dot(tmpbuf,neigharray.neighbors[interface_id].backupdesignatedIP),IP2Dot(tmpbuf+20,backupdesignatedIP));
+        COPY_IP(neigharray.neighbors[interface_id].backupdesignatedIP, backupdesignatedIP);
+        update=TRUE;
+    }
+    
+    if(helloInterval!=neigharray.neighbors[interface_id].helloInterval){
+        printf("Hello:HelloInterval changed %d->%d\n",neigharray.neighbors[interface_id].helloInterval,helloInterval);
+        neigharray.neighbors[interface_id].helloInterval=helloInterval;
+        update=TRUE;
+    }
+    
+    if(deadInterval!=neigharray.neighbors[interface_id].deadInterval){
+        printf("Hello:DeadInterval changed %d->%d\n",neigharray.neighbors[interface_id].deadInterval,deadInterval);
+        neigharray.neighbors[interface_id].deadInterval=deadInterval;
+        update=TRUE;
+    }
+    
+    neigharray.neighbors[interface_id].isalive=TRUE;
+    time(&(neigharray.neighbors[interface_id].timestamp));
     //the rest of the properties are not very important, we ignored here.
     return update;
 }
@@ -279,6 +321,7 @@ bool checkInterfaceIsAlive(int interface_id){
         return TRUE;
     }
 }
+
 
 void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     char tmpbuf[MAX_TMPBUF_LEN];
@@ -309,9 +352,10 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     //jingsi: netarray.elem[i]-> interface_id is interface identifier.
     pkt->frame.dst_interface = interf->interface_id;
 
-    //jingsi: set ip_src to the IP address of current interface IP.       
+    //jingsi: set ip_src to the IP address of current interface IP.
+    printf("encapsulation: %s\n",IP2Dot(tmpbuf,interf->ip_addr));
     COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, interf->ip_addr));
-
+    printf("encapsulation: %s\n",IP2Dot(tmpbuf,ip_pkt->ip_src));
     //jingsi: dest_ip is the broadcast IP
     COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
 
