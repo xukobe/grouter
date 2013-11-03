@@ -95,7 +95,7 @@ int main(int ac, char *av[])
         printf("Before CLI Init\n");
 	// start the CLI..
         printf("Invoke OPSFInit!\n");
-        id=OSPFInitHelloThread();
+        //id=OSPFInitHelloThread();
         
 	CLIInit(&(rconfig));
         //xuepeng

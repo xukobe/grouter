@@ -47,6 +47,8 @@ void *OSPFSendHelloMessage(void* ptr) {
                 //alternatively: ip_pkt +1 
                 ip_pkt->ip_pkt_len = htons(ip_pkt->ip_hdr_len * 4);
                 
+                ip_pkt->ip_ttl = 64; // set TTL to default value
+                ip_pkt->ip_cksum = 0; // reset the checksum field
        
                 //printf("%d",netarray.elem[i]->interface_id);
                  //jingsi: frame.dst_interface is outgoing interface.
@@ -71,6 +73,7 @@ void *OSPFSendHelloMessage(void* ptr) {
 
                 //compute the new checksum
                 cksum = checksum((uchar *) ip_pkt, ip_pkt->ip_hdr_len * 2);
+                printf("Checksum %d\n",cksum);
                 ip_pkt->ip_cksum = htons(cksum);
                 pkt->data.header.prot = htons(IP_PROTOCOL);
                 printf("Sending %d\n",i);

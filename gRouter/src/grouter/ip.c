@@ -96,6 +96,7 @@ int IPProcessBcastPacket(gpacket_t *in_pkt) {
     ip_packet_t *ip_pkt = (ip_packet_t *) in_pkt->data.data;
    
     printf("In IPProcessBcastPacket\n");
+    printf("Received Checksum, %d\n",ip_pkt->ip_cksum);
     if (IPVerifyPacket(ip_pkt) == EXIT_SUCCESS) {
     //Xuepeng: add OSPF protocol process section
         printf("After verify\n");
@@ -423,6 +424,8 @@ int IPVerifyPacket(ip_packet_t *ip_pkt) {
     int hdr_len = ip_pkt->ip_hdr_len;
 
     // verify the header checksum
+    printf("Original checksum %d\n",ip_pkt->ip_cksum);
+    printf("Recalculated checksum %d\n",checksum((void *) ip_pkt, hdr_len * 2));
     if (checksum((void *) ip_pkt, hdr_len * 2) != 0) {
         verbose(2, "[IPVerifyPacket]:: packet from %s failed checksum, packet thrown",
                 IP2Dot(tmpbuf, gNtohl((tmpbuf + 20), ip_pkt->ip_src)));
