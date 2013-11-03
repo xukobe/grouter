@@ -315,7 +315,8 @@ int UDPProcess(gpacket_t *in_pkt) {
  * TODO: implement OSPF protocol
  */
 int OSPFProcess(gpacket_t *in_pkt) {
-    printf("Hehe, SB!");
+    //printf("Hehe, SB!");
+    OSPFPacketProcess(in_pkt);
     return EXIT_SUCCESS;
 }
 
