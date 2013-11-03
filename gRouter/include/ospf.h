@@ -80,6 +80,6 @@ int OSPFInitLSAThread();
 void *OSPFCheckDead(void* ptr);
 int OSPFInitCheckDeadThread();
 
-void OSPFProcess(gpacket_t* in_packet);
+void OSPFPacketProcess(gpacket_t* in_packet);
 
 #endif

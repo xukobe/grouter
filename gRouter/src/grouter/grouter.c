@@ -92,11 +92,14 @@ int main(int ac, char *av[])
 		addTarget("Default Queue", qtoa);
 	else
 		printf("Error .. found null queue for default\n");
-
+        printf("Before CLI Init\n");
 	// start the CLI..
+        printf("Invoke OPSFInit!\n");
+        id=OSPFInitHelloThread();
+        
 	CLIInit(&(rconfig));
         //xuepeng
-        printf("Invoke OPSFInit!\n");
+        
         //id=OSPFInitHelloThread();
 
 	wait4thread(rconfig.scheduler);
