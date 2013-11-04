@@ -52,6 +52,7 @@ extern pktcore_t *pcore;
 
 void sendOSPFHello();
 void sendOSPFLSA();
+void viewRouterArray();
 /*
  * This is the main routine of the CLI. Everything starts here.
  * The CLI registers and commands into a hash table and forks a thread to
@@ -97,7 +98,9 @@ int CLIInit(router_config *rarg)
 	registerCLI("filter", filterCmd, SHELP_FILTER, USAGE_FILTER, LHELP_FILTER);
         registerCLI("ospfHello",sendOSPFHello,SHELP_PING,SHELP_PING,SHELP_PING);
         registerCLI("ospfLSA",sendOSPFLSA,SHELP_PING,SHELP_PING,SHELP_PING);
+        registerCLI("ospfRouter",viewRouterArray,SHELP_PING,SHELP_PING,SHELP_PING);
 
+        
 	if (rarg->config_dir != NULL)
 		chdir(rarg->config_dir);                  // change to the configuration directory
 	if (rarg->config_file != NULL)
@@ -1176,5 +1179,10 @@ void sendOSPFHello()
 
 void sendOSPFLSA(){
     //OSPFInitLSAThread();
+    OSPFSendLSAMessage();
+}
+
+void viewRouterArray(){
+    OSPFViewRouters();
 }
 
