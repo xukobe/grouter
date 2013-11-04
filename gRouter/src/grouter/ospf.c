@@ -20,7 +20,9 @@
 
 extern interface_array_t netarray;
 neigh_array_t neigharray;
-int seq = 0; //Sequence number for LSA
+router_array routerarray;
+int linkstate[][];
+uint32_t seq = 0; //Sequence number for LSA
 
 int OSPFInit() {
     int i = 0;
@@ -122,12 +124,12 @@ int OSPFInitHelloThread() {
     return threadid;
 }
 
-void *OSPFSendLSAMessage(void* ptr) {
+void OSPFSendLSAMessage() {
     int i = 0, j = 0, k = 0;
     char tmpbuf[MAX_TMPBUF_LEN];
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-    pthread_testcancel();
+//    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+//
+//    pthread_testcancel();
     for (i = 0; i < MAX_INTERFACES; i++) {
         if (netarray.elem[i] != NULL) {
             gpacket_t* pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
@@ -189,23 +191,23 @@ void *OSPFSendLSAMessage(void* ptr) {
             IPSend2Output(pkt);
         }
     }
-    sleep(10);
+    seq++;
 
 }
 
-int OSPFInitLSAThread(){
-    int threadstat, threadid;
-
-    threadstat = pthread_create((pthread_t *) & threadid, NULL, (void *) OSPFSendLSAMessage, NULL);
-    printf("[OSPF] Thread creating!\n");
-    if (threadstat != 0) {
-        printf("[OSPF] Thread creation failed!\n");
-        verbose(1, "[OSPFInitHelloThread]:: unable to create thread.. ");
-        return -1;
-    }
-    printf("[OSPF] Thread created!\n");
-    return threadid;
-}
+//int OSPFInitLSAThread(){
+//    int threadstat, threadid;
+//
+//    threadstat = pthread_create((pthread_t *) & threadid, NULL, (void *) OSPFSendLSAMessage, NULL);
+//    printf("[OSPF] Thread creating!\n");
+//    if (threadstat != 0) {
+//        printf("[OSPF] Thread creation failed!\n");
+//        verbose(1, "[OSPFInitHelloThread]:: unable to create thread.. ");
+//        return -1;
+//    }
+//    printf("[OSPF] Thread created!\n");
+//    return threadid;
+//}
 
 void OSPFPacketProcess(gpacket_t* in_packet) {
     int hello_neighbors_size = 0;
@@ -231,6 +233,7 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
             //do something
             //recalculate the algorithm
             //initiate LSA message to neighbor.
+            OSPFSendLSAMessage();
             printf("Need update!");
         }
         
@@ -238,6 +241,8 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
     else if(ospf_pkt->type==4){
         ospf_lsa_header_t* lsa_header = (ospf_lsa_header_t*) (ospf_pkt + 1);
         lsa_data_t* lsa_data = (lsa_data_t*) (lsa_header + 1);
+        
+        //forward or not
         
         printf("LSA header link state id %s\n",IP2Dot(tmpbuf, lsa_header->linkstateid));
         printf("LSA data number of links: %d\n",lsa_data->numberOfLinks);
@@ -323,6 +328,17 @@ bool checkInterfaceIsAlive(int interface_id){
     }
 }
 
+void *OSPFCheckDead(void* ptr){
+    while(1){
+        
+        //dosomething
+        sleep(10);
+    }
+}
+
+int OSPFInitCheckDeadThread(){
+    
+}
 
 void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     char tmpbuf[MAX_TMPBUF_LEN];

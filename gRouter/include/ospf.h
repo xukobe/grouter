@@ -12,6 +12,7 @@
 #include "message.h"
 #include <time.h>
 
+#define MAX_ROUTER_NUMBER 50
 #define DEFAULT_HELLO_INTERVAL 10
 #define DEFAULT_DEAD_INTERVAL 40
 #define DEFAULT_PRIORITY 0
@@ -21,8 +22,8 @@
 #define ANY_TO_ANY 2
 #define STUB 3
 
-typedef struct _ospf_header_t
-{
+//ospf header
+typedef struct _ospf_header_t{
     uint8_t version;
     uint8_t type;
     uint16_t msglen;
@@ -33,9 +34,8 @@ typedef struct _ospf_header_t
     //uchar auth[8];
 } ospf_header_t;
 
-
-typedef struct _ospf_lsa_header_t
-{
+//ospf lsa
+typedef struct _ospf_lsa_header_t{
     uint16_t age;
     uint16_t type;
     uchar linkstateid[4];
@@ -45,8 +45,7 @@ typedef struct _ospf_lsa_header_t
     uint16_t len;
 }ospf_lsa_header_t;
 
-typedef struct _lsa_elem_t
-{
+typedef struct _lsa_elem_t{
     uchar linkID[4];
     uchar linkData[4];
     uint8_t linkType;
@@ -54,13 +53,13 @@ typedef struct _lsa_elem_t
     uint16_t metrics;
 }lsa_elem_t;
 
-typedef struct _lsa_data_t
-{
+typedef struct _lsa_data_t{
     uint16_t allZeors;
     uint16_t numberOfLinks;
     lsa_elem_t elem[MAX_INTERFACES];
 }lsa_data_t;
 
+//ospf hello
 typedef struct _neigh_ip_t{
     uchar ip[4];
 }neigh_ip_t;
@@ -76,8 +75,8 @@ typedef struct _ospf_hello_data_t{
     neigh_ip_t neighbors[MAX_INTERFACES];
 }ospf_hello_data_t;
 
-typedef struct _neigh_entry_t
-{
+//neighbor entry
+typedef struct _neigh_entry_t{
     uchar ip[4];
     uchar netmask[4];
     time_t timestamp;//keep the time stamp for the last hello message
@@ -90,16 +89,33 @@ typedef struct _neigh_entry_t
     bool isalive;
 }neigh_entry_t;
 
-typedef struct _neigh_array_t
-{
+typedef struct _neigh_array_t{
     neigh_entry_t neighbors[MAX_INTERFACES];
     uint16_t count;
 }neigh_array_t;
 
-typedef struct _router_t
-{
-    
-};
+//Router information
+typedef struct _router_entry_t{
+    uchar network[4];
+    union{
+        uchar routerAddress[4];
+        uchar netmask[4];
+    }linkdata;
+    bool isStub;
+}router_entry;
+
+typedef struct _router_t{
+    bool isempty;
+    int entryCount;
+    int seq;
+    router_entry entries[MAX_INTERFACES];
+}router_t;
+
+typedef struct _router_array_t{
+    int count;
+    router_t routers[MAX_ROUTER_NUMBER];
+}router_array;
+
 
 int OSPFInit();
 
