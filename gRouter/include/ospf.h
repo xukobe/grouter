@@ -96,6 +96,11 @@ typedef struct _neigh_array_t
     uint16_t count;
 }neigh_array_t;
 
+typedef struct _router_t
+{
+    
+};
+
 int OSPFInit();
 
 void *OSPFSendHelloMessage(void* ptr);
@@ -110,4 +115,8 @@ int OSPFInitCheckDeadThread();
 void OSPFPacketProcess(gpacket_t* in_packet);
 
 bool hello_updateTheNeighbors(gpacket_t* in_packet);
+
+//100 is infinite 
+void djAlg(int** c,int** v, int size);
+
 #endif

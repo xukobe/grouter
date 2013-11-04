@@ -127,71 +127,70 @@ void *OSPFSendLSAMessage(void* ptr) {
     char tmpbuf[MAX_TMPBUF_LEN];
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    while (1) {
-        pthread_testcancel();
-        for (i = 0; i < MAX_INTERFACES; i++) {
-            if (netarray.elem[i] != NULL) {
-                gpacket_t* pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
-                ip_packet_t *ip_pkt = (ip_packet_t*) (pkt->data.data);
-                ospf_header_t* ospf_pkt = (ospf_header_t*) (ip_pkt + 1);
-                ospf_lsa_header_t* lsa_header = (ospf_lsa_header_t*) (ospf_pkt + 1);
-                lsa_data_t* lsa_data = (lsa_data_t*) (lsa_header + 1);
-                uchar network[4];
-                int neighCounter = 0;
-                //Fill in the lsa data
-                lsa_data->allZeors = 0;
-                lsa_data->numberOfLinks = neigharray.count;
-                for (j = 0; j < MAX_INTERFACES; j++) {
-                    if (neigharray.neighbors[j].isalive) {
-                        for (k = 0; k < 4; k++)
-                            network[k] = neigharray.neighbors[j].netmask[k] & neigharray.neighbors[j].ip[k];
-                        COPY_IP(lsa_data->elem[neighCounter].linkID, gHtonl(tmpbuf, network));
-                        for (k = 0; k < 5; k++)
-                            lsa_data->elem[neighCounter].allZeros[k] = 0;
-                        lsa_data->elem[neighCounter].metrics = 1;
-                        if (neigharray.neighbors[j].isStub) {
-                            COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].netmask));
-                            lsa_data->elem[neighCounter].linkType = STUB;
-                        } else {
-                            COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].ip));
-                            lsa_data->elem[neighCounter].linkType = ANY_TO_ANY;
-                        }
-                        neighCounter++;
+    pthread_testcancel();
+    for (i = 0; i < MAX_INTERFACES; i++) {
+        if (netarray.elem[i] != NULL) {
+            gpacket_t* pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
+            ip_packet_t *ip_pkt = (ip_packet_t*) (pkt->data.data);
+            ospf_header_t* ospf_pkt = (ospf_header_t*) (ip_pkt + 1);
+            ospf_lsa_header_t* lsa_header = (ospf_lsa_header_t*) (ospf_pkt + 1);
+            lsa_data_t* lsa_data = (lsa_data_t*) (lsa_header + 1);
+            uchar network[4];
+            int neighCounter = 0;
+            //Fill in the lsa data
+            lsa_data->allZeors = 0;
+            lsa_data->numberOfLinks = neigharray.count;
+            for (j = 0; j < MAX_INTERFACES; j++) {
+                if (neigharray.neighbors[j].isalive) {
+                    for (k = 0; k < 4; k++)
+                        network[k] = neigharray.neighbors[j].netmask[k] & neigharray.neighbors[j].ip[k];
+                    COPY_IP(lsa_data->elem[neighCounter].linkID, gHtonl(tmpbuf, network));
+                    for (k = 0; k < 5; k++)
+                        lsa_data->elem[neighCounter].allZeros[k] = 0;
+                    lsa_data->elem[neighCounter].metrics = 1;
+                    if (neigharray.neighbors[j].isStub) {
+                        COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].netmask));
+                        lsa_data->elem[neighCounter].linkType = STUB;
+                    } else {
+                        COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].ip));
+                        lsa_data->elem[neighCounter].linkType = ANY_TO_ANY;
                     }
+                    neighCounter++;
                 }
-
-                //Fill in the lsa_header
-                lsa_header->age = 0;
-                lsa_header->type = 1;
-                COPY_IP(lsa_header->linkstateid, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
-                COPY_IP(lsa_header->adrouter, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
-                lsa_header->seq = seq;
-                lsa_header->checksum = 0;
-                lsa_header->len = sizeof (ospf_lsa_header_t) + sizeof (lsa_data_t)-(MAX_INTERFACES - neighCounter) * sizeof (lsa_elem_t);
-
-                //Fill in the ospf header;
-                ospf_pkt->version = 2;
-                ospf_pkt->type = 4;
-                ospf_pkt->msglen = sizeof (ospf_header_t) + lsa_header->len;
-                COPY_IP(ospf_pkt->ip_src, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
-                ospf_pkt->areaID = 0;
-                ospf_pkt->authtype = 0;
-                ospf_pkt->checksum = checksum((uchar *) ospf_pkt, ospf_pkt->msglen / 2);
-                
-                //Fill in the IP header
-                encapsulationForOSPF(pkt,netarray.elem[i]);
-
-                printf("Sending %d\n", i);
-
-                printf("IP packet: version %d\n", ip_pkt->ip_version);
-                printf("OSPF packet: version %d Source IP %u.%u.%u.%u\n", ospf_pkt->version, ospf_pkt->ip_src[0], ospf_pkt->ip_src[1], ospf_pkt->ip_src[2], ospf_pkt->ip_src[3]);
-                printf("LSA data: Number of Links %d \n", lsa_data->numberOfLinks);
-
-                IPSend2Output(pkt);
             }
+
+            //Fill in the lsa_header
+            lsa_header->age = 0;
+            lsa_header->type = 1;
+            COPY_IP(lsa_header->linkstateid, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+            COPY_IP(lsa_header->adrouter, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+            lsa_header->seq = seq;
+            lsa_header->checksum = 0;
+            lsa_header->len = sizeof (ospf_lsa_header_t) + sizeof (lsa_data_t)-(MAX_INTERFACES - neighCounter) * sizeof (lsa_elem_t);
+
+            //Fill in the ospf header;
+            ospf_pkt->version = 2;
+            ospf_pkt->type = 4;
+            ospf_pkt->msglen = sizeof (ospf_header_t) + lsa_header->len;
+            COPY_IP(ospf_pkt->ip_src, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+            ospf_pkt->areaID = 0;
+            ospf_pkt->authtype = 0;
+            ospf_pkt->checksum = checksum((uchar *) ospf_pkt, ospf_pkt->msglen / 2);
+
+            //Fill in the IP header
+            encapsulationForOSPF(pkt,netarray.elem[i]);
+
+            printf("Sending %d\n", i);
+
+            printf("IP packet: version %d\n", ip_pkt->ip_version);
+            printf("OSPF packet: version %d Source IP %u.%u.%u.%u\n", ospf_pkt->version, ospf_pkt->ip_src[0], ospf_pkt->ip_src[1], ospf_pkt->ip_src[2], ospf_pkt->ip_src[3]);
+            printf("LSA data: Number of Links %d \n", lsa_data->numberOfLinks);
+
+            IPSend2Output(pkt);
         }
-        sleep(10);
     }
+    sleep(10);
+
 }
 
 int OSPFInitLSAThread(){
@@ -230,6 +229,8 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         
         if(hello_updateTheNeighbors(in_packet)){
             //do something
+            //recalculate the algorithm
+            //initiate LSA message to neighbor.
             printf("Need update!");
         }
         
@@ -375,4 +376,8 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     ip_pkt->ip_cksum = htons(cksum);
     pkt->data.header.prot = htons(IP_PROTOCOL);
 
+}
+
+void djAlg(int** c,int** v, int size){
+    
 }
