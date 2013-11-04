@@ -21,7 +21,7 @@
 extern interface_array_t netarray;
 neigh_array_t neigharray;
 router_array routerarray;
-int linkstate[][];
+int linkstate[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER];
 uint32_t seq = 0; //Sequence number for LSA
 
 int OSPFInit() {
@@ -124,7 +124,38 @@ int OSPFInitHelloThread() {
     return threadid;
 }
 
-void OSPFSendLSAMessage() {
+
+void *OSPFCheckDead(void* ptr){
+    int i;
+    while(1){
+        pthread_testcancel();
+        for(i = 0; i < MAX_INTERFACES; i++){
+            if(neigharray.neighbors[i].isalive){
+                time_t time_current = time(0);
+                time_t time_neighbour = neigharray.neighbors[i].timestamp;
+                int v = time_current - time_neighbour;
+                if(v > DEFAULT_DEAD_INTERVAL){
+                    neigharray.neighbors[i].isalive = FALSE;
+                }
+            }
+        }
+        sleep(10);
+    }
+}
+int OSPFInitCheckDeadThread(){
+    int threadstat, threadid;
+    threadstat = pthread_create((pthread_t *) & threadid, NULL, (void *) OSPFCheckDead, NULL);
+        printf("[OSPF] Thread creating!\n");
+    if (threadstat != 0) {
+        printf("[OSPF] Thread creation failed!\n");
+        verbose(1, "[OSPFInitHelloThread]:: unable to create thread.. ");
+        return -1;
+    }
+    printf("[OSPF] Thread created!\n");
+    return threadid;  
+}
+
+void *OSPFSendLSAMessage() {
     int i = 0, j = 0, k = 0;
     char tmpbuf[MAX_TMPBUF_LEN];
 //    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -208,6 +239,7 @@ void OSPFSendLSAMessage() {
 //    printf("[OSPF] Thread created!\n");
 //    return threadid;
 //}
+
 
 void OSPFPacketProcess(gpacket_t* in_packet) {
     int hello_neighbors_size = 0;
@@ -328,17 +360,6 @@ bool checkInterfaceIsAlive(int interface_id){
     }
 }
 
-void *OSPFCheckDead(void* ptr){
-    while(1){
-        
-        //dosomething
-        sleep(10);
-    }
-}
-
-int OSPFInitCheckDeadThread(){
-    
-}
 
 void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     char tmpbuf[MAX_TMPBUF_LEN];

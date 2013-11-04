@@ -122,8 +122,8 @@ int OSPFInit();
 void *OSPFSendHelloMessage(void* ptr);
 int OSPFInitHelloThread();
 
-void *OSPFSendLSAMessage(void* ptr);
-int OSPFInitLSAThread();
+void *OSPFSendLSAMessage();
+//int OSPFInitLSAThread();
 
 void *OSPFCheckDead(void* ptr);
 int OSPFInitCheckDeadThread();

@@ -1175,6 +1175,6 @@ void sendOSPFHello()
 }
 
 void sendOSPFLSA(){
-    OSPFInitLSAThread();
+    //OSPFInitLSAThread();
 }
 
