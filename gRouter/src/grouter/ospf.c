@@ -509,10 +509,37 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     pkt->data.header.prot = htons(IP_PROTOCOL);
 
 }
-
-void djAlg(int** c, int** v, int size) {
-
-}
+////
+// TEST SAMPLE
+//#include <stdio.h>
+//#include <stdlib.h>
+//
+//#define false 0
+//#define true 1
+//#define MAX_NUM_ROUTER 5
+//int main() {
+//    int dist[MAX_ROUTER_NUMBER];
+//    int size = 5;
+//    int cost[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER] = {
+//        {0, 1, 999, 1, 999},
+//        {1, 0, 1, 999, 1},
+//        {999, 1, 0, 1, 1},
+//        {1, 999, 1, 0, 1},
+//        {999, 1, 1, 1, 0}
+//    };
+//    int next[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER];
+//    djAlg(&cost[0][0], &next[0][0], size);
+//    int i,j ;
+//    printf("shortest path:\n");
+//    for(i = 0; i< size; i++){
+//        for(j = 0; j< size; j++){
+//        printf("%d->%d:cost%d next hop is:%d\t",i,j,cost[i][j],next[i][j]);
+//        }
+//        printf("\n");
+//    }
+//
+//    return (EXIT_SUCCESS);
+//}
 
 void OSPFViewRouters(){
     int i,j;
@@ -523,5 +550,68 @@ void OSPFViewRouters(){
             for(j=0;j<routerarray.routers[i].entryCount;j++)
                 printf("\t\tnetwork %s, linkdata %s\n",IP2Dot(tmpbuf, routerarray.routers[i].entries[j].network),IP2Dot(tmpbuf+20, routerarray.routers[i].entries[j].linkdata.routerAddress));
         }
+    }
+}
+/*
+ * FUNNAME:ajAlg
+ * @input :
+ *      cost[][MAX_ROUTER_NUMBER] : path cost
+ *      next[][] : next hop router
+ *      size : number of considered routers
+ * call : ajAlg(&cost[0][0]，&next[0][0], size)
+*/
+void djAlg(int cost[][MAX_ROUTER_NUMBER], int next[][MAX_ROUTER_NUMBER], int size) {
+    int v0 = 0;
+    int isFinal[MAX_ROUTER_NUMBER], isFirstHop[MAX_ROUTER_NUMBER];
+    int dist[MAX_ROUTER_NUMBER];
+    int i, v, w, min, k;
+    int shortestDistance[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER];
+    printf("\nshortest path:\n");
+    for (k = 0; k < size; k++) {
+        // initial shortest path(not the result)          
+        for (v = 0; v < size; v++) {
+            isFinal[v] = 0;
+            isFirstHop[v] = TRUE;
+            next[k][v] = v;
+            dist[v] = cost[v0][v];
+        }
+        // dis(v0-v0)=0   is the final distance         
+        isFinal[v0] = TRUE;
+        // vo - the other points:
+        for (i = 0; i < size - 1; i++) {
+            //initial shortest path = inf
+            min = 999;
+            // looking for shortest path         
+            for (w = 0; w < size; w++) {
+                if (!isFinal[w] && dist[w] < min) {
+                    min = dist[w];
+                    //v: current considered destination
+                    v = w;
+                }
+            }
+            isFinal[v] = 1;
+
+            // add new path  
+            for (w = 0; w < size; w++) {
+                // update distance matrix           
+                if (!isFinal[w] && dist[v] + cost[v][w] < dist[w]) {
+                    if (isFirstHop[w] == TRUE) {
+                        next[v0][w] = v;
+                        isFirstHop[w] = FALSE;
+                    }
+                    dist[w] = dist[v] + cost[v][w];
+                }
+            }
+        }
+
+        for (i = 0; i < size; i++) {
+            //shortestDistance[v0][i] = dist[i];
+            //printf("%d->%d: %2d\t", v0, i, dist[i]);
+            //printf("%d->%d:%2d next hop is: %d||", v0, i, shortestDistance[v0][i],next[v0][i]);
+            cost[v0][i] = dist[i];
+        }
+        //printf("\n");
+        //next source point:
+        v0++;
     }
 }
