@@ -551,7 +551,7 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
 //
 //#define false 0
 //#define true 1
-//#define MAX_NUM_ROUTER 5
+//#define MAX_ROUTER_NUMBER 5
 //int main() {
 //    int dist[MAX_ROUTER_NUMBER];
 //    int size = 5;
@@ -613,59 +613,47 @@ void handleUML(gpacket_t* pkt){
  *      size : number of considered routers
  * call : ajAlg(&cost[0][0]，&next[0][0], size)
  */
-void djAlg(int** cost, int** next, int size) {
-    int v0 = 0;
+void djAlg(int cost[][MAX_ROUTER_NUMBER], int next[][MAX_ROUTER_NUMBER], int size) {
     int isFinal[MAX_ROUTER_NUMBER], isFirstHop[MAX_ROUTER_NUMBER];
-    int dist[MAX_ROUTER_NUMBER];
-    int i, v, w, min, k;
-    int shortestDistance[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER];
+    int k, i, v, w, min;
     printf("\nshortest path:\n");
     for (k = 0; k < size; k++) {
         // initial shortest path(not the result)          
         for (v = 0; v < size; v++) {
             isFinal[v] = 0;
-            isFirstHop[v] = TRUE;
+            isFirstHop[v] = 1;
             next[k][v] = v;
-            dist[v] = cost[v0][v];
         }
-        // dis(v0-v0)=0   is the final distance         
-        isFinal[v0] = TRUE;
+        // dis(k-k)=0   is the final distance         
+        isFinal[k] = 1;
         // vo - the other points:
         for (i = 0; i < size - 1; i++) {
             //initial shortest path = inf
             min = 999;
             // looking for shortest path         
             for (w = 0; w < size; w++) {
-                if (!isFinal[w] && dist[w] < min) {
-                    min = dist[w];
+                if (!isFinal[w] && cost[k][w] < min) {
+                    min = cost[k][w];
                     //v: current considered destination
                     v = w;
                 }
             }
             isFinal[v] = 1;
-
             // add new path  
             for (w = 0; w < size; w++) {
                 // update distance matrix           
-                if (!isFinal[w] && dist[v] + cost[v][w] < dist[w]) {
-                    if (isFirstHop[w] == TRUE) {
-                        next[v0][w] = v;
-                        isFirstHop[w] = FALSE;
+                if (!isFinal[w] && cost[k][v] + cost[v][w] < cost[k][w]) {
+                    if (isFirstHop[w] == 1) {
+                        if (isFirstHop[v] == 0)
+                            next[k][w] = next[k][v];
+                        else
+                            next[k][w] = v;
+                        isFirstHop[w] = 0;
                     }
-                    dist[w] = dist[v] + cost[v][w];
+                    cost[k][w] = cost[k][v] + cost[v][w];
                 }
             }
         }
-
-        for (i = 0; i < size; i++) {
-            //shortestDistance[v0][i] = dist[i];
-            //printf("%d->%d: %2d\t", v0, i, dist[i]);
-            //printf("%d->%d:%2d next hop is: %d||", v0, i, shortestDistance[v0][i],next[v0][i]);
-            cost[v0][i] = dist[i];
-        }
-        //printf("\n");
-        //next source point:
-        v0++;
     }
 }
 
