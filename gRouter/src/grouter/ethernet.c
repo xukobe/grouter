@@ -84,7 +84,7 @@ void* fromEthernetDev(void *arg)
 	interface_t *iface = (interface_t *) arg;
 	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	uchar bcast_mac[] = MAC_BCAST_ADDR;
-
+        
 	gpacket_t *in_pkt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);		// die as soon as cancelled
@@ -103,8 +103,10 @@ void* fromEthernetDev(void *arg)
 		// check whether the incoming packet is a layer 2 broadcast or
 		// meant for this node... otherwise should be thrown..
 		// TODO: fix for promiscuous mode packet snooping.
+                //printf("Enthernet:header prot %d, ip version %d, protocol:%d\n",in_pkt->data.header.prot,((ip_packet_t*)(&(in_pkt->data.data)))->ip_version,((ip_packet_t*)(&(in_pkt->data.data)))->ip_prot);
+                //printf("%d\n",(((ip_packet_t*)(&(in_pkt->data.data)))->ip_prot!=128));
 		if ((COMPARE_MAC(in_pkt->data.header.dst, iface->mac_addr) != 0) &&
-			(COMPARE_MAC(in_pkt->data.header.dst, bcast_mac) != 0))
+			(COMPARE_MAC(in_pkt->data.header.dst, bcast_mac) != 0)&&(((ip_packet_t*)(&(in_pkt->data.data)))->ip_prot!=128))
 		{
 			verbose(1, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
 			free(in_pkt);

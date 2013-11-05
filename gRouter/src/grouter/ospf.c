@@ -39,20 +39,22 @@ int OSPFInit() {
     for (i = 0; i < MAX_ROUTER_NUMBER; i++) {
         routerarray.routers[i].isempty = TRUE;
     }
+    
+    
 
-//    neigharray.count = 1;
-//    neigharray.neighbors[1].isalive = TRUE;
-//    neigharray.neighbors[1].ip[0] = 0xff;
-//    neigharray.neighbors[1].ip[1] = 0xff;
-//    neigharray.neighbors[1].ip[2] = 0xff;
-//    neigharray.neighbors[1].ip[3] = 0xff;
-//    neigharray.neighbors[1].interface_id = 1;
-//    neigharray.neighbors[1].netmask[0] = 0xff;
-//    neigharray.neighbors[1].netmask[1] = 0xff;
-//    neigharray.neighbors[1].netmask[2] = 0xff;
-//    neigharray.neighbors[1].netmask[3] = 0x00;
-//    neigharray.neighbors[1].isStub = FALSE;
-//    time(&neigharray.neighbors[1].timestamp);
+    //    neigharray.count = 1;
+    //    neigharray.neighbors[1].isalive = TRUE;
+    //    neigharray.neighbors[1].ip[0] = 0xff;
+    //    neigharray.neighbors[1].ip[1] = 0xff;
+    //    neigharray.neighbors[1].ip[2] = 0xff;
+    //    neigharray.neighbors[1].ip[3] = 0xff;
+    //    neigharray.neighbors[1].interface_id = 1;
+    //    neigharray.neighbors[1].netmask[0] = 0xff;
+    //    neigharray.neighbors[1].netmask[1] = 0xff;
+    //    neigharray.neighbors[1].netmask[2] = 0xff;
+    //    neigharray.neighbors[1].netmask[3] = 0x00;
+    //    neigharray.neighbors[1].isStub = FALSE;
+    //    time(&neigharray.neighbors[1].timestamp);
     return EXIT_SUCCESS;
 }
 
@@ -163,6 +165,7 @@ int OSPFInitCheckDeadThread() {
     return threadid;
 }
 
+
 void OSPFSendLSAMessage() {
     int i = 0, j = 0, k = 0;
     char tmpbuf[MAX_TMPBUF_LEN];
@@ -170,7 +173,7 @@ void OSPFSendLSAMessage() {
     //
     //    pthread_testcancel();
     for (i = 0; i < MAX_INTERFACES; i++) {
-        if (netarray.elem[i] != NULL) {
+        if (neigharray.neighbors[i].isalive) {
             gpacket_t* pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
             ip_packet_t *ip_pkt = (ip_packet_t*) (pkt->data.data);
             ospf_header_t* ospf_pkt = (ospf_header_t*) (ip_pkt + 1);
@@ -179,47 +182,56 @@ void OSPFSendLSAMessage() {
             uchar network[4];
             int neighCounter = 0;
             //Fill in the lsa data
+            printf("OSPFSendLSA: 1\n");
             lsa_data->allZeors = 0;
             lsa_data->numberOfLinks = neigharray.count;
             for (j = 0; j < MAX_INTERFACES; j++) {
+                printf("OSPFSendLSA: 2\n");
                 if (neigharray.neighbors[j].isalive) {
+                    printf("OSPFSendLSA: 3\n");
                     for (k = 0; k < 4; k++)
                         network[k] = neigharray.neighbors[j].netmask[k] & neigharray.neighbors[j].ip[k];
+                    printf("OSPFSendLSA: 4\n");
                     COPY_IP(lsa_data->elem[neighCounter].linkID, gHtonl(tmpbuf, network));
                     for (k = 0; k < 5; k++)
                         lsa_data->elem[neighCounter].allZeros[k] = 0;
+                    printf("OSPFSendLSA: 5\n");
                     lsa_data->elem[neighCounter].metrics = 1;
+                    printf("neighbors netmask %s\n", IP2Dot(tmpbuf, neigharray.neighbors[j].netmask));
+                    printf("neighbors routeraddress %s\n", IP2Dot(tmpbuf, netarray.elem[neigharray.neighbors[j].interface_id]->ip_addr));
                     if (neigharray.neighbors[j].isStub) {
                         COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].netmask));
                         lsa_data->elem[neighCounter].linkType = STUB;
                     } else {
-                        COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, neigharray.neighbors[j].ip));
+                        COPY_IP(lsa_data->elem[neighCounter].linkData, gHtonl(tmpbuf, netarray.elem[neigharray.neighbors[j].interface_id]->ip_addr));
                         lsa_data->elem[neighCounter].linkType = ANY_TO_ANY;
                     }
+                    printf("OSPFSendLSA: 6\n");
                     neighCounter++;
                 }
             }
-
+            printf("OSPFSendLSA: 7\n");
             //Fill in the lsa_header
             lsa_header->age = 0;
             lsa_header->type = 1;
-            COPY_IP(lsa_header->linkstateid, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
-            COPY_IP(lsa_header->adrouter, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+            COPY_IP(lsa_header->linkstateid, gHtonl(tmpbuf, netarray.elem[neigharray.neighbors[i].interface_id]->ip_addr));
+            COPY_IP(lsa_header->adrouter, gHtonl(tmpbuf, netarray.elem[neigharray.neighbors[i].interface_id]->ip_addr));
             lsa_header->seq = seq;
             lsa_header->checksum = 0;
             lsa_header->len = sizeof (ospf_lsa_header_t) + sizeof (lsa_data_t)-(MAX_INTERFACES - neighCounter) * sizeof (lsa_elem_t);
-
+            
+            printf("OSPFSendLSA: 8\n");
             //Fill in the ospf header;
             ospf_pkt->version = 2;
             ospf_pkt->type = 4;
             ospf_pkt->msglen = sizeof (ospf_header_t) + lsa_header->len;
-            COPY_IP(ospf_pkt->ip_src, gHtonl(tmpbuf, netarray.elem[i]->ip_addr));
+            COPY_IP(ospf_pkt->ip_src, gHtonl(tmpbuf, netarray.elem[neigharray.neighbors[i].interface_id]->ip_addr));
             ospf_pkt->areaID = 0;
             ospf_pkt->authtype = 0;
             ospf_pkt->checksum = checksum((uchar *) ospf_pkt, ospf_pkt->msglen / 2);
 
             //Fill in the IP header
-            encapsulationForOSPF(pkt, netarray.elem[i]);
+            encapsulationForOSPF(pkt, netarray.elem[neigharray.neighbors[i].interface_id]);
 
             printf("Sending %d\n", i);
 
@@ -234,19 +246,26 @@ void OSPFSendLSAMessage() {
 
 }
 
-//int OSPFInitLSAThread(){
-//    int threadstat, threadid;
-//
-//    threadstat = pthread_create((pthread_t *) & threadid, NULL, (void *) OSPFSendLSAMessage, NULL);
-//    printf("[OSPF] Thread creating!\n");
-//    if (threadstat != 0) {
-//        printf("[OSPF] Thread creation failed!\n");
-//        verbose(1, "[OSPFInitHelloThread]:: unable to create thread.. ");
-//        return -1;
-//    }
-//    printf("[OSPF] Thread created!\n");
-//    return threadid;
-//}
+void *OSPFRunLSA(void* ptr){
+    while(1){
+        OSPFSendLSAMessage();
+        sleep(15);
+    }
+}
+
+int OSPFInitLSAThread(){
+    int threadstat, threadid;
+
+    threadstat = pthread_create((pthread_t *) & threadid, NULL, (void *) OSPFRunLSA, NULL);
+    printf("[OSPF] Thread creating!\n");
+    if (threadstat != 0) {
+        printf("[OSPF] Thread creation failed!\n");
+        verbose(1, "[OSPFInitLSAThread]:: unable to create thread.. ");
+        return -1;
+    }
+    printf("[OSPF] Thread created!\n");
+    return threadid;
+}
 
 void OSPFPacketProcess(gpacket_t* in_packet) {
     int hello_neighbors_size = 0;
@@ -285,12 +304,12 @@ void OSPFPacketProcess(gpacket_t* in_packet) {
         if (updateRouterArray(lsa_header)) {
             //forward
             for (i = 0; i < MAX_INTERFACES; i++) {
-                if (netarray.elem[i] != NULL) {
-                    gpacket_t* gpkt=malloc(sizeof(gpacket_t));
-                    memcpy(gpkt, in_packet, sizeof(gpacket_t));
-                    printf("Interface %d:%d\n",i,netarray.elem[i]->interface_id);
+                if (neigharray.neighbors[i].isalive && neigharray.neighbors[i].interface_id!=in_packet->frame.src_interface) {
+                    gpacket_t* gpkt = malloc(sizeof (gpacket_t));
+                    memcpy(gpkt, in_packet, sizeof (gpacket_t));
+                    printf("Interface %d:%d\n", i, netarray.elem[i]->interface_id);
                     encapsulationForOSPF(gpkt, netarray.elem[i]);
-                    //IPSend2Output(gpkt);
+                    IPSend2Output(gpkt);
                 }
             }
         }
@@ -319,9 +338,13 @@ bool updateRouterArray(ospf_lsa_header_t* lsa_header) {
             printf("updateRouterArray 2\n");
             router = &(routerarray.routers[i]);
             for (j = 0; j < router->entryCount; j++) {
+                printf("Router->entries[j] %s\n", IP2Dot(tmpbuf, router->entries[j].linkdata.routerAddress));
+                printf("lsa_header->adrouter %s\n", IP2Dot(tmpbuf, adRouterIP));
                 if (COMPARE_IP(router->entries[j].linkdata.routerAddress, adRouterIP) == 0) {
+                    printf("updateRouterArray 3\n");
                     isFound = TRUE;
                     if (router->seq < lsa_header->seq) {
+                        printf("updateRouterArray 4\n");
                         duplicated = FALSE;
                         router->seq = lsa_header->seq;
                         router->entryCount = lsa_data->numberOfLinks;
@@ -343,22 +366,24 @@ bool updateRouterArray(ospf_lsa_header_t* lsa_header) {
                     break;
                 }
             }
-            printf("updateRouterArray 3\n");
+            printf("updateRouterArray 5\n");
             if (isFound == TRUE) {
-                return duplicated;
+                return !duplicated;
             }
         }
     }
-    printf("updateRouterArray 4\n");
+    printf("updateRouterArray 6\n");
     if (isFound == FALSE) {
-        printf("updateRouterArray 5\n");
+        printf("updateRouterArray 7\n");
         for (i = 0; i < MAX_ROUTER_NUMBER; i++) {
             if (routerarray.routers[i].isempty) {
-                printf("updateRouterArray 6\n");
+                printf("updateRouterArray 8\n");
                 router = &(routerarray.routers[i]);
                 duplicated = FALSE;
                 router->seq = lsa_header->seq;
+                printf("seq:%d\n",lsa_header->seq);
                 router->entryCount = lsa_data->numberOfLinks;
+                printf("Number of Links:%d\n",lsa_data->numberOfLinks);
                 for (k = 0; k < router->entryCount; k++) {
                     if (lsa_data->elem[k].linkType == 2) {
                         router->entries[k].isStub = FALSE;
@@ -375,7 +400,7 @@ bool updateRouterArray(ospf_lsa_header_t* lsa_header) {
             }
         }
     }
-    printf("updateRouterArray 7\n");
+    printf("updateRouterArray 9\n");
     return TRUE;
 }
 
@@ -441,8 +466,18 @@ bool hello_updateTheNeighbors(gpacket_t* in_pkt) {
         neigharray.neighbors[interface_id].deadInterval = deadInterval;
         update = TRUE;
     }
+    
+    if (interface_id!=neigharray.neighbors[interface_id].interface_id){
+        neigharray.neighbors[interface_id].interface_id=interface_id;
+        update=TRUE;
+    }
 
-    neigharray.neighbors[interface_id].isalive = TRUE;
+    if(neigharray.neighbors[interface_id].isalive == FALSE)
+    {
+        neigharray.count++;
+        neigharray.neighbors[interface_id].isalive=TRUE;
+        update=TRUE;
+    }
     time(&(neigharray.neighbors[interface_id].timestamp));
     //the rest of the properties are not very important, we ignored here.
     return update;
@@ -484,7 +519,7 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
     //jingsi: frame.dst_interface is outgoing interface.
     //jingsi: netarray.elem[i]-> interface_id is interface identifier.
     pkt->frame.dst_interface = interf->interface_id;
-    printf("encapsulation: dst_interface: %d\n",pkt->frame.dst_interface);
+    printf("encapsulation: dst_interface: %d\n", pkt->frame.dst_interface);
     //jingsi: set ip_src to the IP address of current interface IP.
     printf("encapsulation: %s\n", IP2Dot(tmpbuf, interf->ip_addr));
     COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, interf->ip_addr));
@@ -541,17 +576,35 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
 //    return (EXIT_SUCCESS);
 //}
 
-void OSPFViewRouters(){
-    int i,j;
+void OSPFViewRouters() {
+    int i, j;
     char tmpbuf[MAX_TMPBUF_LEN];
-    for(i=0;i<MAX_ROUTER_NUMBER;i++){
-        if(!routerarray.routers[i].isempty){
-            printf("Router %d information: entryCount: %d, seq %d\n",i,routerarray.routers[i].entryCount,routerarray.routers[i].seq);
-            for(j=0;j<routerarray.routers[i].entryCount;j++)
-                printf("\t\tnetwork %s, linkdata %s\n",IP2Dot(tmpbuf, routerarray.routers[i].entries[j].network),IP2Dot(tmpbuf+20, routerarray.routers[i].entries[j].linkdata.routerAddress));
+    for (i = 0; i < MAX_ROUTER_NUMBER; i++) {
+        if (!routerarray.routers[i].isempty) {
+            printf("Router %d information: entryCount: %d, seq %d\n", i, routerarray.routers[i].entryCount, routerarray.routers[i].seq);
+            for (j = 0; j < routerarray.routers[i].entryCount; j++)
+                printf("\t\tnetwork %s, linkdata %s\n", IP2Dot(tmpbuf, routerarray.routers[i].entries[j].network), IP2Dot(tmpbuf + 20, routerarray.routers[i].entries[j].linkdata.routerAddress));
         }
     }
 }
+
+void handleUML(gpacket_t* pkt){
+    char tmpbuf[MAX_TMPBUF_LEN];
+    uchar netmask[4] = DEFAULT_NETMASK;
+    int interface_id = pkt->frame.src_interface;
+    ip_packet_t* ip_pkt = (ip_packet_t*)pkt->data.data;
+    COPY_IP(neigharray.neighbors[interface_id].ip, gNtohl(tmpbuf, ip_pkt->ip_src));
+    COPY_IP(neigharray.neighbors[interface_id].netmask, netmask);
+    printf("HandleUML,%d\n",IP2Dot(tmpbuf,netmask));
+    neigharray.neighbors[interface_id].interface_id=interface_id;
+    neigharray.neighbors[interface_id].isStub=TRUE;
+    if(neigharray.neighbors[interface_id].isalive==FALSE){
+        neigharray.neighbors[interface_id].isalive=TRUE;
+        neigharray.count++;
+    }
+    OSPFSendLSAMessage();
+}
+
 /*
  * FUNNAME:ajAlg
  * @input :
@@ -559,8 +612,8 @@ void OSPFViewRouters(){
  *      next[][] : next hop router
  *      size : number of considered routers
  * call : ajAlg(&cost[0][0]，&next[0][0], size)
-*/
-void djAlg(int cost[][MAX_ROUTER_NUMBER], int next[][MAX_ROUTER_NUMBER], int size) {
+ */
+void djAlg(int** cost, int** next, int size) {
     int v0 = 0;
     int isFinal[MAX_ROUTER_NUMBER], isFirstHop[MAX_ROUTER_NUMBER];
     int dist[MAX_ROUTER_NUMBER];
@@ -615,3 +668,4 @@ void djAlg(int cost[][MAX_ROUTER_NUMBER], int next[][MAX_ROUTER_NUMBER], int siz
         v0++;
     }
 }
+

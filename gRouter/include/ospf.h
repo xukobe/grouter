@@ -123,9 +123,13 @@ void *OSPFSendHelloMessage(void* ptr);
 int OSPFInitHelloThread();
 
 void OSPFSendLSAMessage();
-//int OSPFInitLSAThread();
+
+int OSPFInitLSAThread();
+
+void *OSPFRunLSA(void* ptr);
 
 void *OSPFCheckDead(void* ptr);
+
 int OSPFInitCheckDeadThread();
 
 void OSPFPacketProcess(gpacket_t* in_packet);
@@ -135,6 +139,10 @@ void OSPFViewRouters();
 bool hello_updateTheNeighbors(gpacket_t* in_packet);
 
 bool updateRouterArray(ospf_lsa_header_t* lsa_header);
+
+void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf);
+
+void handleUML(gpacket_t* pkt);
 
 //100 is infinite 
 void djAlg(int** c,int** v, int size);

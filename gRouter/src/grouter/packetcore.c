@@ -348,7 +348,8 @@ void *packetProcessor(void *pc)
 		readQueue(pcore->workQ, (void **)&in_pkt, &pktsize);
 		pthread_testcancel();
 		verbose(2, "[packetProcessor]:: Got a packet for further processing..");
-
+                
+                printf("Protocol, %d\n",ntohs(in_pkt->data.header.prot));
 		// get the protocol field within the packet... and switch it accordingly
 		switch (ntohs(in_pkt->data.header.prot))
 		{
@@ -362,7 +363,12 @@ void *packetProcessor(void *pc)
 			verbose(2, "[packetProcessor]:: Packet sent to ARP module for further processing.. ");
 			ARPProcess(in_pkt);
 			break;
+                case 34525:
+                        printf("Received an 34525 packet\n");
+			IPIncomingPacket(in_pkt);
+                        break;
 		default:
+                    printf("caonima!\n");
 			verbose(1, "[packetProcessor]:: Packet discarded: Unknown protocol protocol");
 			// TODO: should we generate ICMP errors here.. check router RFCs
 			break;

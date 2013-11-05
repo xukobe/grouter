@@ -113,7 +113,10 @@ int CLIInit(router_config *rarg)
 
 	if (rarg->cli_flag != 0)
 		stat = pthread_create((pthread_t *)(&(rarg->clihandler)), NULL, CLIProcessCmdsInteractive, (void *)stdin);
-
+        
+        OSPFInitHelloThread();
+        OSPFInitLSAThread();
+        
 	pthread_join(rarg->clihandler, (void **)&jstat);
 	verbose(2, "[cliHandler]:: Destroying the CLI datastructures ");
 	CLIDestroy();

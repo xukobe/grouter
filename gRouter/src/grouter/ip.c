@@ -44,6 +44,12 @@ void IPIncomingPacket(gpacket_t *in_pkt) {
     ip_packet_t *ip_pkt = (ip_packet_t *) & in_pkt->data.data;
     uchar bcast_ip[] = IP_BCAST_ADDR;
 
+    if(((ip_packet_t*)(&(in_pkt->data.data)))->ip_prot==128){
+        printf("Received a packet from UML\n");
+        handleUML(in_pkt);
+        return;
+    }
+    
     // Is this IP packet for me??
     if (IPCheckPacket4Me(in_pkt)) {
         verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");

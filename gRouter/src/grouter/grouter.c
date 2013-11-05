@@ -57,7 +57,7 @@ int main(int ac, char *av[])
 	char rpath[MAX_NAME_LEN];
 	int status, *jstatus;
 	simplequeue_t *outputQ, *workQ, *qtoa;
-        pthread_t id;
+        pthread_t helloid,lsaid;
 
 	// setup the program properties
 	setupProgram(ac, av);
@@ -97,6 +97,9 @@ int main(int ac, char *av[])
 	// start the CLI..
         printf("Invoke OPSFInit!\n");
         //id=OSPFInitHelloThread();
+        //helloid=OSPFInitHelloThread();
+        //lsaid=OSPFInitLSAThread();
+        
         
 	CLIInit(&(rconfig));
         //xuepeng
@@ -106,7 +109,8 @@ int main(int ac, char *av[])
 	wait4thread(rconfig.scheduler);
 	wait4thread(rconfig.worker);
 	wait4thread(rconfig.ghandler);
-        //wait4thread(id);
+        //wait4thread(helloid);
+        //wait4thread(lsaid);
 }
 
 
