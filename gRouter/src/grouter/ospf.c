@@ -921,13 +921,13 @@ void generateRoutingTable() {
             }
         }
         
-        for(j=0;j<topSize;j++){
-            printf("\n");
-            for(k=0;k<topSize;k++){
-                printf("%d ",via[j][k]);
-            }
-        }
-        printf("\n");
+//        for(j=0;j<topSize;j++){
+//            printf("\n");
+//            for(k=0;k<topSize;k++){
+//                printf("%d ",via[j][k]);
+//            }
+//        }
+//        printf("\n");
         
         if(nextHopIndex==-1){
             continue;
