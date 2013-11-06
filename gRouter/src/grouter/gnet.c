@@ -759,7 +759,7 @@ void *GNETHandler(void *outq)
 			return NULL;
 		verbose(2, "[gnetHandler]:: Recvd message pkt ");
 		pthread_testcancel();
-                printf("Output queue sending pkt\n");
+                //printf("Output queue sending pkt\n");
 		if ((iface = findInterface(in_pkt->frame.dst_interface)) == NULL)
 		{
 			error("[gnetHandler]:: Packet dropped, interface [%d] is invalid ", in_pkt->frame.dst_interface);
@@ -790,7 +790,7 @@ void *GNETHandler(void *outq)
                 
                 //Xuepeng:
                 ip_packet_t *ip_pkt = (ip_packet_t*) (in_pkt->data.data);
-                printf("GNET %s\n",IP2Dot(tmpbuf,ip_pkt->ip_dst));
+                //printf("GNET %s\n",IP2Dot(tmpbuf,ip_pkt->ip_dst));
                 //send packet
 		iface->devdriver->todev((void *)in_pkt);
 

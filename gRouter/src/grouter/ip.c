@@ -45,7 +45,7 @@ void IPIncomingPacket(gpacket_t *in_pkt) {
     uchar bcast_ip[] = IP_BCAST_ADDR;
 
     if(((ip_packet_t*)(&(in_pkt->data.data)))->ip_prot==128){
-        printf("Received a packet from UML\n");
+        //printf("Received a packet from UML\n");
         handleUML(in_pkt);
         return;
     }
@@ -58,7 +58,7 @@ void IPIncomingPacket(gpacket_t *in_pkt) {
         // TODO: rudimentary 'broadcast IP address' check
         verbose(2, "[IPIncomingPacket]:: not repeat broadcast (final destination %s), packet thrown",
                 IP2Dot(tmpbuf, gNtohl((tmpbuf + 20), ip_pkt->ip_dst)));
-        printf("Received a broadcast packet\n");
+        //printf("Received a broadcast packet\n");
         IPProcessBcastPacket(in_pkt);
     } else {
         // Destinated to someone else
@@ -101,11 +101,11 @@ int IPProcessBcastPacket(gpacket_t *in_pkt) {
     
     ip_packet_t *ip_pkt = (ip_packet_t *) in_pkt->data.data;
    
-    printf("In IPProcessBcastPacket\n");
-    printf("Received Checksum, %d\n",ip_pkt->ip_cksum);
+    //printf("In IPProcessBcastPacket\n");
+    //printf("Received Checksum, %d\n",ip_pkt->ip_cksum);
     if (IPVerifyPacket(ip_pkt) == EXIT_SUCCESS) {
     //Xuepeng: add OSPF protocol process section
-        printf("After verify\n");
+        //printf("After verify\n");
         if (ip_pkt->ip_prot == OSPF_PROTOCOL){
             OSPFProcess(in_pkt);
         }
@@ -410,7 +410,7 @@ int IPSend2Output(gpacket_t *pkt) {
         verbose(1, "[IPSend2Output]:: NULL pointer error... nothing sent");
         return EXIT_FAILURE;
     }
-    printf("IPsending pkt\n");
+    //printf("IPsending pkt\n");
     vlevel = prog_verbosity_level();
     if (vlevel >= 3)
         printGPacket(pkt, vlevel, "IP_ROUTINE");
@@ -431,15 +431,15 @@ int IPVerifyPacket(ip_packet_t *ip_pkt) {
     int hdr_len = ip_pkt->ip_hdr_len;
 
     // verify the header checksum
-    printf("Original checksum %d\n",ip_pkt->ip_cksum);
-    printf("Recalculated checksum %d\n",checksum((void *) ip_pkt, hdr_len * 2));
+    //printf("Original checksum %d\n",ip_pkt->ip_cksum);
+    //printf("Recalculated checksum %d\n",checksum((void *) ip_pkt, hdr_len * 2));
     if (checksum((void *) ip_pkt, hdr_len * 2) != 0) {
         verbose(2, "[IPVerifyPacket]:: packet from %s failed checksum, packet thrown",
                 IP2Dot(tmpbuf, gNtohl((tmpbuf + 20), ip_pkt->ip_src)));
         return EXIT_FAILURE;
     }
     //xuepeng:
-    verbose(1,"Checksum correct!");
+    //verbose(1,"Checksum correct!");
     
     // Check correct IP version
     if (ip_pkt->ip_version != 4) {

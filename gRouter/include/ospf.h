@@ -16,11 +16,13 @@
 #define DEFAULT_HELLO_INTERVAL 10
 #define DEFAULT_DEAD_INTERVAL 40
 #define DEFAULT_PRIORITY 0
-#define DEFAULT_NETMASK {0xFF, 0xFF, 0xFF, 0x00}
+#define DEFAULT_NETMASK {0x00, 0xFF, 0xFF, 0xFF}
 #define DEFAULT_DESIGNATED_ROUTER_IP {0x00, 0x00, 0x00, 0x00}
 #define DEFAULT_BACKUP_DESIGNATED_ROUTER_IP {0x00, 0x00, 0x00, 0x00}
 #define ANY_TO_ANY 2
 #define STUB 3
+#define INIF 100
+#define ALLZEROS {0x00, 0x00, 0x00, 0x00}
 
 //ospf header
 typedef struct _ospf_header_t{
@@ -116,6 +118,24 @@ typedef struct _router_array_t{
     router_t routers[MAX_ROUTER_NUMBER];
 }router_array;
 
+typedef struct _route_table_cache_t{
+    uchar network[4];
+    uchar netmask[4];
+    uchar nexthop[4];
+    int interface_id;
+    int cost;
+}route_table_cache_t;
+
+typedef struct _route_table_cache_array_t{
+    int count;
+    route_table_cache_t rtc[MAX_ROUTER_NUMBER];
+}route_table_cache_array_t;
+
+typedef struct _ospf_handler_t{
+    pthread_t hello_thread;
+    pthread_t lsa_thread;
+    pthread_t dead_thread;
+}ospf_handler_t;
 
 int OSPFInit();
 
@@ -136,6 +156,8 @@ void OSPFPacketProcess(gpacket_t* in_packet);
 
 void OSPFViewRouters();
 
+void OSPFViewNeighbors();
+
 bool hello_updateTheNeighbors(gpacket_t* in_packet);
 
 bool updateRouterArray(ospf_lsa_header_t* lsa_header);
@@ -146,5 +168,12 @@ void handleUML(gpacket_t* pkt);
 
 //100 is infinite 
 void djAlg(int** c,int** v, int size);
+
+void generateRoutingTable();
+
+//return network address if true, else return null
+uchar* AreRoutersConnected(router_t* a, router_t* b);
+//return interface id, else return -1
+int isRouterConnectedToMe(router_t* a);
 
 #endif

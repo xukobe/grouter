@@ -53,6 +53,8 @@ extern pktcore_t *pcore;
 void sendOSPFHello();
 void sendOSPFLSA();
 void viewRouterArray();
+void viewNeighArray();
+void generateRoutes();
 /*
  * This is the main routine of the CLI. Everything starts here.
  * The CLI registers and commands into a hash table and forks a thread to
@@ -99,6 +101,8 @@ int CLIInit(router_config *rarg)
         registerCLI("ospfHello",sendOSPFHello,SHELP_PING,SHELP_PING,SHELP_PING);
         registerCLI("ospfLSA",sendOSPFLSA,SHELP_PING,SHELP_PING,SHELP_PING);
         registerCLI("ospfRouter",viewRouterArray,SHELP_PING,SHELP_PING,SHELP_PING);
+        registerCLI("ospfNeigh",viewNeighArray,SHELP_PING,SHELP_PING,SHELP_PING);
+        registerCLI("ospfGRT",generateRoutes,SHELP_PING,SHELP_PING,SHELP_PING);
 
         
 	if (rarg->config_dir != NULL)
@@ -116,6 +120,7 @@ int CLIInit(router_config *rarg)
         
         OSPFInitHelloThread();
         OSPFInitLSAThread();
+        OSPFInitCheckDeadThread();
         
 	pthread_join(rarg->clihandler, (void **)&jstat);
 	verbose(2, "[cliHandler]:: Destroying the CLI datastructures ");
@@ -1189,3 +1194,10 @@ void viewRouterArray(){
     OSPFViewRouters();
 }
 
+void viewNeighArray(){
+    OSPFViewNeighbors();
+}
+
+void generateRoutes(){
+    generateRoutingTable();
+}
