@@ -593,6 +593,39 @@ void encapsulationForOSPF(gpacket_t* pkt, interface_t* interf) {
 
 }
 
+////
+// TEST SAMPLE
+//#include <stdio.h>
+//#include <stdlib.h>
+//
+//#define false 0
+//#define true 1
+//#define MAX_ROUTER_NUMBER 5
+//int main() {
+//    int dist[MAX_ROUTER_NUMBER];
+//    int size = 5;
+//    int cost[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER] = {
+//        {0, 1, 999, 1, 999},
+//        {1, 0, 1, 999, 1},
+//        {999, 1, 0, 1, 1},
+//        {1, 999, 1, 0, 1},
+//        {999, 1, 1, 1, 0}
+//    };
+//    int next[MAX_ROUTER_NUMBER][MAX_ROUTER_NUMBER];
+//    djAlg(&cost[0][0], &next[0][0], size);
+//    int i,j ;
+//    printf("shortest path:\n");
+//    for(i = 0; i< size; i++){
+//        for(j = 0; j< size; j++){
+//        printf("%d->%d:cost%d next hop is:%d\t",i,j,cost[i][j],next[i][j]);
+//        }
+//        printf("\n");
+//    }
+//
+//    return (EXIT_SUCCESS);
+//}
+
+
 void OSPFViewRouters() {
     int i, j;
     char tmpbuf[MAX_TMPBUF_LEN];
@@ -939,6 +972,7 @@ void generateRoutingTable() {
                     }
                     isFound = TRUE;
                     break;
+
                 }
             }
             
@@ -955,6 +989,7 @@ void generateRoutingTable() {
                 rtcarray->count++;
             }
         }
+
         
         //printf("6.7\n");
         
@@ -1011,6 +1046,7 @@ uchar* AreRoutersConnected(router_t* a, router_t* b) {
                 return a->entries[i].network;
             }
         }
+
     }
     return NULL;
 }
