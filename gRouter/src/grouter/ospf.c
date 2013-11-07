@@ -780,7 +780,7 @@ void generateRoutingTable() {
     //for source router
     int networkCount = 0;
     uchar networks[MAX_INTERFACES][4];
-
+    /******************************calculate shortest path****************************************/
     //printf("1 %d\n", topSize);
 
     for (i = 0; i < topSize; i++) {
@@ -829,7 +829,7 @@ void generateRoutingTable() {
     }
 
     //printf("3\n");
-    
+    //for other routers
     for (i = 1; i < routercount; i++) {
         for (j = i + 1; j < routercount; j++) {
             router_t* a = &(routerarray.routers[routerIndex[i]]);
@@ -846,9 +846,13 @@ void generateRoutingTable() {
     //printf("4\n");
     
     djAlg(relation, via, topSize);
-
+    /*******************************************************************************************/
+    
+    /****************************generate routing table***************************************/
+    
     //printf("5\n");
     
+    //generating
     //for self
     for (i = 0; i < MAX_INTERFACES; i++) {
         if (neigharray.neighbors[i].isalive) {
